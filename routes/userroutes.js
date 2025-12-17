@@ -1,6 +1,7 @@
 import express from "express";
-import { userLoginController, userRegisterController } from "../controllers/usercontrollers.js";
+import { userLoginController, userLogoutController, userRegisterController } from "../controllers/usercontrollers.js";
 import { upload } from "../middlewares/multermiddlewares.js";
+import { verifyJwtMiddleware } from "../middlewares/authmiddlewares.js";
 
 let router = express.Router();
 
@@ -15,5 +16,6 @@ router.post("/register",upload.fields([
     }
 ]),userRegisterController);
 router.post("/login",userLoginController);
+router.post("/logout",verifyJwtMiddleware,userLogoutController);
 
 export default router;

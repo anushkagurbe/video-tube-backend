@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import userModel from "../models/usermodel";
+import userModel from "../models/usermodel.js";
 
 export let verifyJwtMiddleware = async(req, res, next)=>{
     try
@@ -9,7 +9,7 @@ export let verifyJwtMiddleware = async(req, res, next)=>{
         {
             return res.status(401).json({success: false, msg: "Unauthorized user"});
         }
-        let decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        let decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         if(!decodedToken)
         {
             return res.status(400).json({success: false, msg: "Invalid token"});
