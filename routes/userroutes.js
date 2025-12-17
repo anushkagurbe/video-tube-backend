@@ -1,5 +1,5 @@
 import express from "express";
-import { userLoginController, userLogoutController, userRegisterController } from "../controllers/usercontrollers.js";
+import { refreshAccessTokenController, userLoginController, userLogoutController, userRegisterController } from "../controllers/usercontrollers.js";
 import { upload } from "../middlewares/multermiddlewares.js";
 import { verifyJwtMiddleware } from "../middlewares/authmiddlewares.js";
 
@@ -17,5 +17,6 @@ router.post("/register",upload.fields([
 ]),userRegisterController);
 router.post("/login",userLoginController);
 router.post("/logout",verifyJwtMiddleware,userLogoutController);
+router.post("/refreshtoken",verifyJwtMiddleware,refreshAccessTokenController);
 
 export default router;

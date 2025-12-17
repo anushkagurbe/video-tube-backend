@@ -1,7 +1,24 @@
 import userModel from "../models/usermodel.js";
 
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+
+
+let generateAccessAndRefreshToken = async(userid)=>{
+  try
+  {
+    let user = await userModel.findOne({_id: userid});
+    let accessToken = user.generateAccesstoken();
+    let refreshToken = user.generateRefreshtoken();
+    return {refreshToken, accessToken};
+  }
+  catch(error)
+  {
+    console.log(error)
+    return res.status(500).json({success: false, msg: "Error occured while creating access and refresh token. "+error});
+  }
+}
 
 export let userRegisterController = async (req, res) => {
   try {
@@ -87,10 +104,8 @@ export let userLoginController = async (req, res) => {
     {
       return res.status(401).json({success: false, msg: "Invalid password"});
     }
-    let accessToken = isUserExists.generateAccesstoken();
-    let refreshToken = isUserExists.generateRefreshtoken();
-    console.log(accessToken);
-    console.log(refreshToken);
+
+    let {refreshToken, accessToken} = await generateAccessAndRefreshToken(isUserExists._id);
     await userModel.updateOne({_id: isUserExists._id}, {$set: {refreshtoken: refreshToken}});
     let options = {
       httpOnly: true,
@@ -98,7 +113,7 @@ export let userLoginController = async (req, res) => {
     }
     return res.status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken,)
+    .cookie("refreshToken", refreshToken,options)
     .json({success: true, user: {
       _id: isUserExists._id,
       username: isUserExists.username,
@@ -116,6 +131,43 @@ export let userLoginController = async (req, res) => {
   {
     console.log(error)
     return res.status(500).json({success: false, msg: "Server error"+error});
+  }
+}
+
+
+export let refreshAccessTokenController = async (req, res) =>{
+  try
+  {
+    let incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    if(!incomingRefreshToken)
+    {
+      return res.status(401).json({success: false, msg: "Unauthorized request"});
+    }
+    let decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    let user = await userModel.findOne({_id: decodedToken.id});
+    if(!user || incomingRefreshToken !== user?.refreshtoken)
+    {
+      return res.status(401).json({success: false, msg: "Invalid refresh token "});
+    }
+    let { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+    let options = {
+      httpOnly: true,
+      secure: true
+    }
+    return res.status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken,options)
+    .json({success: true, user: {
+      refreshToken: refreshToken,
+      accessToken: accessToken
+    },
+    msg: "Token refreshed successfully"
+  })
+  }
+  catch(error)
+  {
+    console.log(error)
+    return res.status(500).json({success: false, msg: "Server error "+error});
   }
 }
 
