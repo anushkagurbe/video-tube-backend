@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 let videoSchema = mongoose.Schema({
-    videofile: {
+    video: {
         type: String,
         required: true
     },
@@ -35,7 +35,7 @@ let videoSchema = mongoose.Schema({
     }
 },
 {
-    timestamp: true
+    timestamps: true
 })
 
 let videoModel = mongoose.model("video", videoSchema);

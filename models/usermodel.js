@@ -33,7 +33,7 @@ let userSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    watchistory: [{
+    watchhistory: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "video"
     }],
